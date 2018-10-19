@@ -1,2 +1,5 @@
 secrets.py
-vengit reset --soft HEAD~1v
+venv
+__pycache__
+.idea
+*.pyc
