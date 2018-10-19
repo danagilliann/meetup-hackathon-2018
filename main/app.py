@@ -1,9 +1,10 @@
-from builtins import int
+from builtins import int, str, len
 from datetime import datetime
 
 import requests
 import secrets
 import pprint
+
 
 def get_results(market_id):
     api_key = secrets.api_key
@@ -19,11 +20,19 @@ def iso_to_datetime(iso=""):
     return datetime.strptime(iso, '%Y-%m-%dT%H:%M:%S.000Z')
 
 
-def parse_time(hour, minute):
-    return int(hour + minute)
+def parse_time(hour=0, minute=0):
+    if len(str(hour)) == 1:
+        hour = "0" + str(hour)
+
+    if len(str(minute)) == 1:
+        minute = "0" + str(minute)
+
+    # print(hour, minute)
+
+    return int(str(hour) + str(minute))
 
 
-def get_opening_hours(meetupable_data):
+def get_opening_hours(meetupable_data={}):
     pp = pprint.PrettyPrinter(indent=2)
 
     opening_hours = {}
@@ -48,16 +57,16 @@ def get_opening_hours(meetupable_data):
     return opening_hours
 
 
-def is_hour_minute_problematic(wework_start_time_hour_minute=0, wework_end_time_hour_minute=0,
-                               req_start_time_hour_minute=0, req_end_time_hour_minute=0):
-    if (wework_start_time_hour_minute < req_start_time_hour_minute < wework_start_time_hour_minute or
-            wework_start_time_hour_minute < req_end_time_hour_minute < wework_end_time_hour_minute):
-        return False
-    return True
+def is_hour_minute_intersecting(wework_start_time_hour_minute=0, wework_end_time_hour_minute=0,
+                                req_start_time_hour_minute=0, req_end_time_hour_minute=0):
+    if (wework_start_time_hour_minute < req_start_time_hour_minute < wework_end_time_hour_minute or
+            wework_start_time_hour_minute < req_end_time_hour_minute <= wework_end_time_hour_minute):
+        return True
+    return False
 
 
-def is_day_booked(wework_start_time_year=0, wework_start_time_month=0, wework_start_time_day=0,
-                  req_start_time_year=0, req_start_time_month=0, req_start_time_day=0):
+def is_same_day(wework_start_time_year=0, wework_start_time_month=0, wework_start_time_day=0,
+                req_start_time_year=0, req_start_time_month=0, req_start_time_day=0):
     return wework_start_time_year == req_start_time_year and \
            wework_start_time_month == req_start_time_month and \
            wework_start_time_day == req_start_time_day
@@ -80,8 +89,8 @@ def is_meetupable(opening_hours={}, req_start_time=datetime, req_end_time=dateti
             req_start_time_hour_minute = parse_time(req_start_time.hour, req_end_time.minute)
             req_end_time_hour_minute = parse_time(req_end_time.hour, req_end_time.minute)
 
-            return is_hour_minute_problematic(open_time, close_time, req_start_time_hour_minute,
-                                              req_end_time_hour_minute)
+            return is_hour_minute_intersecting(open_time, close_time, req_start_time_hour_minute,
+                                               req_end_time_hour_minute)
 
 
 def is_conflicting(reservation_start_time=datetime, reservation_end_time=datetime, req_start_time=datetime,
@@ -90,13 +99,16 @@ def is_conflicting(reservation_start_time=datetime, reservation_end_time=datetim
 
     reservation_start_time_hour_minute = parse_time(reservation_start_time.hour, reservation_start_time.minute)
     reservation_end_time_hour_minute = parse_time(reservation_end_time.hour, reservation_end_time.minute)
-    req_start_time_hour_minute = parse_time(req_start_time.hour, req_end_time.minute)
+    req_start_time_hour_minute = parse_time(req_start_time.hour, req_start_time.minute)
     req_end_time_hour_minute = parse_time(req_end_time.hour, req_end_time.minute)
 
-    if is_day_booked(int(reservation_start_time.year), int(reservation_start_time.month), int(reservation_start_time.day),
-                     int(req_start_time.year), int(req_start_time.month), int(req_start_time.day)) and \
-            not is_hour_minute_problematic(reservation_start_time_hour_minute, reservation_end_time_hour_minute,
-                                           req_start_time_hour_minute, req_end_time_hour_minute):
+    print(reservation_start_time_hour_minute, reservation_end_time_hour_minute, req_start_time_hour_minute, req_end_time_hour_minute)
+
+    if is_same_day(int(reservation_start_time.year), int(reservation_start_time.month),
+                   int(reservation_start_time.day),
+                   int(req_start_time.year), int(req_start_time.month), int(req_start_time.day)) and \
+            is_hour_minute_intersecting(reservation_start_time_hour_minute, reservation_end_time_hour_minute,
+                                        req_start_time_hour_minute, req_end_time_hour_minute):
         return True
     return False
 
@@ -134,7 +146,7 @@ def find_availability(results={}, start_time=datetime, end_time=datetime):
 if __name__ == '__main__':
     user_starttime = "2018-11-07T17:30:00.000Z"
     user_endtime = "2018-11-07T19:00:00.000Z"
-    market_id = "dac1820e-5dae-4c0c-9be8-8916e7aa724a"
+    user_market_id = "dac1820e-5dae-4c0c-9be8-8916e7aa724a"
 
-    api_results = get_results(market_id)
+    api_results = get_results(user_market_id)
     find_availability(api_results, user_starttime, user_endtime)
