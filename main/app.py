@@ -4,15 +4,9 @@ from datetime import datetime
 import requests
 import secrets
 import pprint
-from main.classes.availability import Availability
-
 
 def get_results(market_id):
     api_key = secrets.api_key
-    oauth_key = secrets.oauth_key
-    oauth_secret = secrets.oauth_secret
-    username = secrets.username
-    password = secrets.password
 
     req_url = "https://api.meetup.com/maw/bookable_spaces?key=" + api_key + "&market_id=" + market_id
 
