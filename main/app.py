@@ -27,14 +27,10 @@ def parse_time(hour=0, minute=0):
     if len(str(minute)) == 1:
         minute = "0" + str(minute)
 
-    # print(hour, minute)
-
     return int(str(hour) + str(minute))
 
 
 def get_opening_hours(meetupable_data={}):
-    pp = pprint.PrettyPrinter(indent=2)
-
     opening_hours = {}
 
     weekly_schedule = meetupable_data.get('weekly_schedule')
@@ -95,14 +91,10 @@ def is_meetupable(opening_hours={}, req_start_time=datetime, req_end_time=dateti
 
 def is_conflicting(reservation_start_time=datetime, reservation_end_time=datetime, req_start_time=datetime,
                    req_end_time=datetime):
-    pp = pprint.PrettyPrinter(indent=2)
-
     reservation_start_time_hour_minute = parse_time(reservation_start_time.hour, reservation_start_time.minute)
     reservation_end_time_hour_minute = parse_time(reservation_end_time.hour, reservation_end_time.minute)
     req_start_time_hour_minute = parse_time(req_start_time.hour, req_start_time.minute)
     req_end_time_hour_minute = parse_time(req_end_time.hour, req_end_time.minute)
-
-    print(reservation_start_time_hour_minute, reservation_end_time_hour_minute, req_start_time_hour_minute, req_end_time_hour_minute)
 
     if is_same_day(int(reservation_start_time.year), int(reservation_start_time.month),
                    int(reservation_start_time.day),
@@ -114,8 +106,6 @@ def is_conflicting(reservation_start_time=datetime, reservation_end_time=datetim
 
 
 def find_availability(results={}, start_time=datetime, end_time=datetime):
-    pp = pprint.PrettyPrinter(indent=2)
-
     req_start_time = iso_to_datetime(start_time)
     req_end_time = iso_to_datetime(end_time)
     availability_list = []
@@ -140,13 +130,15 @@ def find_availability(results={}, start_time=datetime, end_time=datetime):
             availability_info = {"location_id": location.get('id'), "room_id": room.get('id')}
             availability_list.append(availability_info)
 
-    pp.pprint(availability_list)
+    return availability_list
 
 
 if __name__ == '__main__':
+    pp = pprint.PrettyPrinter(indent=2)
+
     user_starttime = "2018-11-07T17:30:00.000Z"
     user_endtime = "2018-11-07T19:00:00.000Z"
     user_market_id = "dac1820e-5dae-4c0c-9be8-8916e7aa724a"
 
     api_results = get_results(user_market_id)
-    find_availability(api_results, user_starttime, user_endtime)
+    pp.pprint(find_availability(api_results, user_starttime, user_endtime))
